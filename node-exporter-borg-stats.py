@@ -9,6 +9,7 @@ import shutil
 import configparser
 import thread
 import threading
+import multiprocessing
 from datetime import datetime
 
 
@@ -81,7 +82,7 @@ def borg_repo_check(**kwargs):
 		for line in proc_borg_list.stderr.readlines():
 			m = re.search("passphrase supplied .* is incorrect.", line)
 			if m is not None:
-				print("ERROR: Incorrect Borg repokey")
+				print("ERROR: Incorrect Borg repokey for repo " + borg_repo)
 			else:
 				print(line)
 		return
@@ -150,7 +151,7 @@ def borg_repo_check(**kwargs):
 
 	tmp_file.close()
 	shutil.move(tmp_file_name, prom_file_name)
-
+	print("Repo " + borg_repo + " complete.")
 
 
 config = configparser.ConfigParser()
@@ -163,6 +164,8 @@ except IOError:
 	raise ValueError, "config file does not exist"
 
 
+
+jobs = []
 for metric in config.sections():
 	crepo = ""
 	crepokey = ""
@@ -183,6 +186,12 @@ for metric in config.sections():
 	#thread.start_new_thread(borg_repo_check, (),kwargsX)
 
 	print("Starting thread for " + crepo)
-	x = threading.Thread(target=borg_repo_check, args=(), kwargs=kwargsX)
-	x.start()
+	#print(kwargsX)
+	#print("\n\n\n")
+	#x = threading.Thread(target=borg_repo_check, args=(), kwargs=kwargsX)
+	#x.start()
+
+	p = multiprocessing.Process(target=borg_repo_check, args=(), kwargs=kwargsX)
+	p.start()
 	time.sleep(2)
+
