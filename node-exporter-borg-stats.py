@@ -7,6 +7,8 @@ import time
 import socket
 import shutil
 import configparser
+import thread
+import threading
 from datetime import datetime
 
 
@@ -27,7 +29,7 @@ def print_prom(file, hostname, archive, parameter, value):
     file.write(parameter+"{host=\""+hostname+"\", archive=\""+archive+"\"} "+str(value)+"\n")
 
 def borg_repo_check(**kwargs):
-
+#def borg_repo_check(repo, repokey, metric_name, sshargs):
 	borg_repo = None
 	borg_repo_key = None
 	metric_name = None
@@ -172,6 +174,15 @@ for metric in config.sections():
 	if config[metric]['sshargs']:
 		csshargs = config[metric]['sshargs']
 
-	borg_repo_check(repo = crepo, repokey = crepokey, metric_name = metric, sshargs = csshargs)
+	#borg_repo_check(repo = crepo, repokey = crepokey, metric_name = metric, sshargs = csshargs)
 
+	#thread.start_new_thread(borg_repo_check,(repo = crepo, repokey = crepokey, metric_name = metric, sshargs = csshargs))
+	kwargsX = {"repo": crepo, "repokey": crepokey, "metric_name": metric, "sshargs" :csshargs}
 
+#	x = threading.Thread(target=borg_reo_check, kwargs=kwargsX).start()
+	#thread.start_new_thread(borg_repo_check, (),kwargsX)
+
+	print("Starting thread for " + crepo)
+	x = threading.Thread(target=borg_repo_check, args=(), kwargs=kwargsX)
+	x.start()
+	time.sleep(2)
