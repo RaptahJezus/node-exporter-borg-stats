@@ -59,7 +59,7 @@ def borg_repo_check(**kwargs):
 	else:
 		os.environ["BORG_PASSPHRASE"] = borg_repo_key
 
-	if hostname is None:
+	if hostnameval is None:
 		hostname=socket.gethostname()
 	else:
 		hostname=hostnameval
@@ -70,6 +70,7 @@ def borg_repo_check(**kwargs):
 
 	if sshargs is not None:
 		os.environ["BORG_RSH"] = sshargs
+
 
 	tmp_file_name = textfile_collector_dir+"/"+metric_name+".tmp"
 	prom_file_name = textfile_collector_dir+"/"+metric_name+".prom"
@@ -123,9 +124,22 @@ def borg_repo_check(**kwargs):
 		print("Repo " + borg_repo  + ": upating "+archive+" from archive "+archive_name)
 
 		print_prom(tmp_file, hostname, archive, "borg_backup_last_update_"+metric_name, time.mktime(archive_datetime.timetuple()))
+		print_prom(tmp_file, hostname, archive, "borg_backup_age_"+metric_name, time.time() - time.mktime(archive_datetime.timetuple()))
 
 		cmd_borg_info=["borg","info",borg_repo+"::"+archive_name]
-		proc_borg_info = subprocess.Popen(cmd_borg_info, stdout=subprocess.PIPE)
+		proc_borg_info = subprocess.Popen(cmd_borg_info, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		proc_borg_info.wait()
+
+
+		#Quit without updating file if any errors occur while running borg info
+        	if proc_borg_info.returncode != 0:
+                	for line in proc_borg_list.stderr.readlines():
+                        	m = re.search("Broken pipe", line)
+                        	if m is not None:
+                                	print("ERROR: Broken pipe while connecting to " + borg_repo)
+                        	else:
+                                	print(line)
+          		return
 
 		for line in proc_borg_info.stdout.readlines():
 			m=re.search("Number of files: (?P<files_number>\d*)", line)
@@ -171,13 +185,16 @@ for metric in config.sections():
 	crepo = ""
 	crepokey = ""
 	csshargs = ""
+	hostname = ""
 	if config[metric]['repo']:
 		crepo = config[metric]['repo']
 	if config[metric]['repokey']:
 		crepokey = config[metric]['repokey']
 	if config[metric]['sshargs']:
 		csshargs = config[metric]['sshargs']
-	kwargsX = {"repo": crepo, "repokey": crepokey, "metric_name": metric, "sshargs" :csshargs}
+	if config[metric]['hostname']:
+		chostname = config[metric]['hostname']
+	kwargsX = {"repo": crepo, "repokey": crepokey, "metric_name": metric, "sshargs" :csshargs, "hostname" : chostname}
 
 
 	p = multiprocessing.Process(target=borg_repo_check, args=(), kwargs=kwargsX)
