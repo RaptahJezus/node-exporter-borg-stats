@@ -110,8 +110,8 @@ def borg_repo_check(**kwargs):
 				# No archive exists for this name, we add it.
 				archives[m.group('archive')]=this_archive
 
-	print(str(len(archives))+" different archives")
-	print(str(count_archives)+" archives in total")
+	print("Repo " + borg_repo +": " + str(len(archives))+" different archives")
+	print("Repo " + borg_repo +": " + str(count_archives)+" archives in total")
 
 	#Create empty tmp file
 	tmp_file = open(tmp_file_name,"w")
@@ -120,7 +120,7 @@ def borg_repo_check(**kwargs):
 		archive_name = value['name']
 		archive_datetime=value['datetime']
 
-		print("upating "+archive+" from archive "+archive_name)
+		print("Repo " + borg_repo  + ": upating "+archive+" from archive "+archive_name)
 
 		print_prom(tmp_file, hostname, archive, "borg_backup_last_update_"+metric_name, time.mktime(archive_datetime.timetuple()))
 
@@ -149,9 +149,10 @@ def borg_repo_check(**kwargs):
 				print_prom(tmp_file, hostname, archive, "borg_backup_total_size_compressed_"+metric_name, calc_bytes(float(m.group('compressed_size')), m.group('compressed_size_unit')))
 				print_prom(tmp_file, hostname, archive, "borg_backup_total_size_dedup_"+metric_name, calc_bytes(float(m.group('total_size')), m.group('total_size_unit')))
 
+	print("Repo " + borg_repo + ": Complete.")
 	tmp_file.close()
 	shutil.move(tmp_file_name, prom_file_name)
-	print("Repo " + borg_repo + " complete.")
+
 
 
 config = configparser.ConfigParser()
@@ -176,22 +177,10 @@ for metric in config.sections():
 		crepokey = config[metric]['repokey']
 	if config[metric]['sshargs']:
 		csshargs = config[metric]['sshargs']
-
-	#borg_repo_check(repo = crepo, repokey = crepokey, metric_name = metric, sshargs = csshargs)
-
-	#thread.start_new_thread(borg_repo_check,(repo = crepo, repokey = crepokey, metric_name = metric, sshargs = csshargs))
 	kwargsX = {"repo": crepo, "repokey": crepokey, "metric_name": metric, "sshargs" :csshargs}
 
-#	x = threading.Thread(target=borg_reo_check, kwargs=kwargsX).start()
-	#thread.start_new_thread(borg_repo_check, (),kwargsX)
-
-	print("Starting thread for " + crepo)
-	#print(kwargsX)
-	#print("\n\n\n")
-	#x = threading.Thread(target=borg_repo_check, args=(), kwargs=kwargsX)
-	#x.start()
 
 	p = multiprocessing.Process(target=borg_repo_check, args=(), kwargs=kwargsX)
 	p.start()
-	time.sleep(2)
+	time.sleep(1)
 
