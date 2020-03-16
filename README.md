@@ -6,7 +6,25 @@ A slightly adapted version of https://framagit.org/tigre-bleu/prometheus-borg-ex
 # Usage
 Call as part of a cron job, or borgmatic post-backup hook. 
 
-**Metrics Collected**
+Required arguments:
+
+Parameter | Description
+----------|------------
+-r, --repo      | Specify full repo. If remote, include SSH username and path
+-k, --key       | Repository key
+-m --metric     | Unique metric suffix to append (See [Metrics section](#Metrics))
+-n, --hostname  | Hostname where repository is located
+
+Optional arguments:
+
+Parameter | Description
+----------|------------
+-i --sshargs  | Specify additional SSH arguments (port, keyfile, etc.)
+-v  --verbose | Run in verbose mode; display raw Borg output during execution
+-q  --quiet   | Run in quiet mode; suppress all messages
+
+
+#Metrics
 
 Metric name | Description
 ------------|------------
@@ -49,4 +67,4 @@ borg_backup_chunks_total_local_repo{host="borghost01", archive="foobarArchive"} 
 
 **Check remote archive over SSH, with arguments**
 
-`$ node-exporter-borg-stats.py --repository borg-user@borghost02:/mnt/data/borg-inbound/foo --key FooBarKey --metric remote_repo --sshargs 'ssh -i /home/borg-user/privkey' --hostname borghost02`
+`$ node-exporter-borg-stats.py --repository borg-user@borghost02:/mnt/data/borg-inbound/foo --key FooBarKey --metric remote_repo --sshargs 'ssh -i /home/borg-user/privkey -p 20022' --hostname borghost02`
