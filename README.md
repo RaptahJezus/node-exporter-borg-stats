@@ -24,7 +24,7 @@ Parameter | Description
 -q  --quiet   | Run in quiet mode; suppress all messages
 
 
-#Metrics
+# Metrics
 
 Metric name | Description
 ------------|------------
