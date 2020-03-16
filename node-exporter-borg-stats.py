@@ -6,10 +6,6 @@ import sys
 import time
 import socket
 import shutil
-import configparser
-import thread
-import threading
-import multiprocessing
 from datetime import datetime
 from optparse import OptionParser
 
@@ -17,13 +13,15 @@ textfile_collector_dir="/var/lib/prometheus/node-exporter"
 
 
 optp = OptionParser()
-optp.add_option('-r', '--repository', help='Select repository to update from', dest='repository')
-optp.add_option('-k', '--key', help='Repo key', dest='repokey')
-optp.add_option('-i', '--sshargs', help='Additional arguments to pass to SSH command',dest='sshargs')
-optp.add_option('-m', '--metric',help='Unique metric name. REQUIRED',dest='metric')
-optp.add_option('-v', '--verbose',help="Print output to STDOUT", action='store_true',dest='verbose')
+optp.add_option('-r', '--repository', help='Required: Repository to check', dest='repository')
+optp.add_option('-k', '--key', help='Required: Repository passkey', dest='repokey')
+optp.add_option('-m', '--metric',help='Required: Unique metric name',dest='metric')
+optp.add_option('-n', '--hostname',help='Required: Hostname where repository is located', dest='hostname')
+
+optp.add_option('-i', '--sshargs', help='Optional: Additional arguments to pass to SSH command',dest='sshargs')
+optp.add_option('-v', '--verbose',help="Print output to terminal", action='store_true',dest='verbose')
 optp.add_option('-q', '--quiet',help="Run in silent mode", action='store_true',dest='quiet')
-optp.add_option('-n', '--hostname',help='Hostname of repository. REQUIRED', dest='hostname')
+
 opts, args = optp.parse_args()
 
 if opts.repository is None:
@@ -109,6 +107,8 @@ if proc_borg_list.returncode != 0:
 
 archives = {}
 count_archives = 0
+
+#Loop through archives discovered in the 'borg list' command
 for archive in proc_borg_list.stdout.readlines():
 	if verbosity == 2:
 		print(archive)
@@ -188,7 +188,7 @@ for line in proc_borg_info.stdout.readlines():
 		print_prom(tmp_file, hostname, archive, "borg_backup_total_size_compressed_"+metric, calc_bytes(float(m.group('compressed_size')), m.group('compressed_size_unit')))
 		print_prom(tmp_file, hostname, archive, "borg_backup_total_size_dedup_"+metric, calc_bytes(float(m.group('total_size')), m.group('total_size_unit')))
 
-if verbose:
+if verbosity >= 1:
 	print("Repo " + repository + ": Complete.")
 
 tmp_file.close()
