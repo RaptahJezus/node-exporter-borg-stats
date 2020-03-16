@@ -88,7 +88,10 @@ cmd_borg_list=["borg","list", repository]
 proc_borg_list = subprocess.Popen(cmd_borg_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 proc_borg_list.wait()
 
+#Check for non-zero exit codes on borg list command
 if proc_borg_list.returncode != 0:
+
+	#Only return errors if verbosity is 1 or 2
 	if verbosity >= 1:
 		for line in proc_borg_list.stderr.readlines():
 			m = re.search("passphrase supplied .* is incorrect.", line)
@@ -102,6 +105,7 @@ if proc_borg_list.returncode != 0:
 
 			else:
 				print(line)
+	#Call sys.exit() if verbosity is 0
 	else:
 		sys.exit();
 
