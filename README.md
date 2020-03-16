@@ -12,16 +12,16 @@ Parameter | Description
 ----------|------------
 -r, --repo      | Specify full repo. If remote, include SSH username and path
 -k, --key       | Repository key
--m --metric     | Unique metric suffix to append (See [Metrics section](#Metrics))
+-m, --metric     | Unique metric suffix to append (See [Metrics section](#Metrics))
 -n, --hostname  | Hostname where repository is located
 
 Optional arguments:
 
 Parameter | Description
 ----------|------------
--i --sshargs  | Specify additional SSH arguments (port, keyfile, etc.)
--v  --verbose | Run in verbose mode; display raw Borg output during execution
--q  --quiet   | Run in quiet mode; suppress all messages
+-i, --sshargs | Specify additional SSH arguments (port, keyfile, etc.)
+-v, --verbose | Run in verbose mode; display raw Borg output during execution
+-q, --quiet   | Run in quiet mode; suppress all messages
 
 
 # Metrics
