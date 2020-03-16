@@ -8,10 +8,6 @@ Call as part of a cron job, or borgmatic post-backup hook.
 
 **Metrics Collected**
 
-* Last backup POSIX timestamp
-* Age in seconds of last backup (current time - POSIX timestamp of last backup)
-* 
-
 Metric name | Description
 ------------|------------
 borg_backup_last_update_            | POSIX timestamp of last archive
@@ -26,12 +22,11 @@ borg_backup_total_size_dedup_       | Deduplicated size of repository (bytes)
 borg_backup_chunks_unique_          | Unique chunks in repository
 borg_backup_chunks_total_           | Total chunks in repository
 
-# Examples
-**Check local repository**
 
-`$ node-exporter-borg-stats.py --repository /mnt/data/foo --key FooBarKey --metric local_repo --hostname borghost01`
+The above table shows the prefix of the metrics collected. The full metric name is the prefix, with the metric flag (specified with `-m` or `--metric`) appended.
 
-Would produce the following file:
+Below is an example `.prom` file:
+
 ```
 borg_backup_last_update_local_repo{host="borghost01", archive="foobarArchive"} 1583307343.0
 borg_backup_age_local_repo{host="borghost01", archive="foobarArchive"} 31439.658803
@@ -45,6 +40,12 @@ borg_backup_total_size_dedup_local_repo{host="borghost01", archive="foobarArchiv
 borg_backup_chunks_unique_local_repo{host="borghost01", archive="foobarArchive"} 2496875
 borg_backup_chunks_total_local_repo{host="borghost01", archive="foobarArchive"} 126809913
 ```
+
+
+# Examples
+**Check local repository**
+
+`$ node-exporter-borg-stats.py --repository /mnt/data/foo --key FooBarKey --metric local_repo --hostname borghost01`
 
 **Check remote archive over SSH, with arguments**
 
