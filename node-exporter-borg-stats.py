@@ -1,10 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import subprocess
 import re
 import os
 import sys
 import time
-import socket
 import shutil
 from datetime import datetime
 from optparse import OptionParser
@@ -40,6 +39,13 @@ metric = opts.metric
 if opts.sshargs is not None:
 	os.environ["BORG_RSH"] = opts.sshargs
 
+if opts.hostname is None:
+	sys.exit('Hostname required')
+hostname = opts.hostname
+
+if not os.path.exists(textfile_collector_dir):
+	sys.exit("Error: Textfile directory does not exist")
+
 
 
 ''' 
@@ -57,12 +63,6 @@ elif opts.verbose is not True and opts.quiet is True:
 	verbosity = 0
 else:
 	verbosity = 1
-	
-
-
-if opts.hostname is None:
-	sys.exit('Hostname required')
-hostname = opts.hostname
 
 def calc_bytes(value, unit):
     if unit=='kB':
@@ -85,12 +85,9 @@ tmp_file_name = textfile_collector_dir+"/"+metric+".tmp"
 prom_file_name = textfile_collector_dir+"/"+metric+".prom"
 
 cmd_borg_list=["borg","list", repository]
-proc_borg_list = subprocess.Popen(cmd_borg_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-proc_borg_list.wait()
 
 #Check for non-zero exit codes on borg list command
 if proc_borg_list.returncode != 0:
-
 	#Only return errors if verbosity is 1 or 2
 	if verbosity >= 1:
 		for line in proc_borg_list.stderr.readlines():
@@ -105,9 +102,7 @@ if proc_borg_list.returncode != 0:
 
 			else:
 				print(line)
-	#Call sys.exit() if verbosity is 0
-	else:
-		sys.exit();
+	sys.exit();
 
 archives = {}
 count_archives = 0
@@ -116,6 +111,7 @@ count_archives = 0
 for archive in proc_borg_list.stdout.readlines():
 	if verbosity == 2:
 		print(archive)
+		
 	m=re.search(r"^(?P<archive>\S+)-(?P<date>\d{4}-\d{2}-\d{2})\S+(?P<time>\d{2}:\d{2}:\d{2})\S*\s", archive)
 	m2=re.search(r"^(?P<name>\S+)\s", archive)
 	if m is not None:
@@ -146,8 +142,8 @@ for archive,value in archives.iteritems():
 
 	if verbosity == 2:
 		print("Repo " + repository  + ": updating "+archive+" from archive "+archive_name)
-		print_prom(tmp_file, hostname, archive, "borg_backup_last_update_"+metric, time.mktime(archive_datetime.timetuple()))
-		print_prom(tmp_file, hostname, archive, "borg_backup_age_"+metric, time.time() - time.mktime(archive_datetime.timetuple()))
+	print_prom(tmp_file, hostname, archive, "borg_backup_last_update_"+metric, time.mktime(archive_datetime.timetuple()))
+	print_prom(tmp_file, hostname, archive, "borg_backup_age_"+metric, time.time() - time.mktime(archive_datetime.timetuple()))
 
 	#Execute borg info command
 	cmd_borg_info=["borg","info",repository+"::"+archive_name]
