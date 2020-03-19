@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# coding: utf-8
 import subprocess
 import re
 import os
@@ -79,12 +80,15 @@ def print_prom(file, hostname, archive, parameter, value):
     file.write(parameter+"{host=\""+hostname+"\", archive=\""+archive+"\"} "+str(value)+"\n")
 
 if verbosity >= 1:
-	print "Updating Prometheus for Borg Repository " + repository
+	print("Updating Prometheus for Borg Repository " + repository)
 
 tmp_file_name = textfile_collector_dir+"/"+metric+".tmp"
 prom_file_name = textfile_collector_dir+"/"+metric+".prom"
 
 cmd_borg_list=["borg","list", repository]
+proc_borg_list = subprocess.Popen(cmd_borg_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+proc_borg_list.wait()
+
 
 #Check for non-zero exit codes on borg list command
 if proc_borg_list.returncode != 0:
@@ -93,7 +97,7 @@ if proc_borg_list.returncode != 0:
 		for line in proc_borg_list.stderr.readlines():
 			m = re.search("passphrase supplied .* is incorrect.", line)
 			if m is not None:
-				sys.exit("ERROR: Incorrect Borg repokey for repo " + repository)
+				sys.exit("ERROR: Incorrect Borg repokey for repo {}".format(repository))
 					
 
 			m = re.search("Failed to create/acquire the lock", line)
@@ -111,7 +115,7 @@ count_archives = 0
 for archive in proc_borg_list.stdout.readlines():
 	if verbosity == 2:
 		print(archive)
-		
+
 	m=re.search(r"^(?P<archive>\S+)-(?P<date>\d{4}-\d{2}-\d{2})\S+(?P<time>\d{2}:\d{2}:\d{2})\S*\s", archive)
 	m2=re.search(r"^(?P<name>\S+)\s", archive)
 	if m is not None:
@@ -136,18 +140,18 @@ if verbosity >= 1:
 # Prepare temporary file
 tmp_file = open(tmp_file_name,"w+")
 
-for archive,value in archives.iteritems():
+for archive,value in archives.items():
 	archive_name = value['name']
 	archive_datetime=value['datetime']
 
 	if verbosity == 2:
-		print("Repo " + repository  + ": updating "+archive+" from archive "+archive_name)
+		print("Updating {} from archive {}".format(archive,archive_name))
 	print_prom(tmp_file, hostname, archive, "borg_backup_last_update_"+metric, time.mktime(archive_datetime.timetuple()))
 	print_prom(tmp_file, hostname, archive, "borg_backup_age_"+metric, time.time() - time.mktime(archive_datetime.timetuple()))
 
 	#Execute borg info command
 	cmd_borg_info=["borg","info",repository+"::"+archive_name]
-	proc_borg_info = subprocess.Popen(cmd_borg_info, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	proc_borg_info = subprocess.Popen(cmd_borg_info, stdout=subprocess.PIPE, stderr=subprocess.PIPE,text=True)
 	proc_borg_info.wait()	
 
 	#Quit without updating file if any errors occur while running borg info
@@ -166,7 +170,7 @@ for archive,value in archives.iteritems():
 
 for line in proc_borg_info.stdout.readlines():
 	if verbosity == 2:
-		print line
+		print(line)
 	m=re.search("Number of files: (?P<files_number>\d*)", line)
 	if m:
 		print_prom(tmp_file, hostname, archive, "borg_backup_files_"+metric, m.group('files_number'))
