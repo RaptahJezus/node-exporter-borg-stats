@@ -11,7 +11,6 @@ from optparse import OptionParser
 
 textfile_collector_dir="/var/lib/prometheus/node-exporter"
 
-
 optp = OptionParser()
 optp.add_option('-r', '--repository', help='Required: Repository to check', dest='repository')
 optp.add_option('-k', '--key', help='Required: Repository passkey', dest='repokey')
@@ -135,7 +134,6 @@ for archive in proc_borg_list.stdout.readlines():
 if verbosity >= 1:
 	print("Repo " + repository +": " + str(len(archives))+" different archives")
 	print("Repo " + repository +": " + str(count_archives)+" archives in total")
-
 
 # Prepare temporary file
 tmp_file = open(tmp_file_name,"w+")
